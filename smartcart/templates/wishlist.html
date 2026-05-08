@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}My Wishlist{% endblock %}
+
+{% block extra_css %}
+<style>
+  .wish-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.25s;
+  }
+
+  .wish-card:hover {
+    box-shadow: 0 10px 32px rgba(0,0,0,0.09);
+    transform: translateY(-3px);
+    border-color: rgba(255,77,0,0.2);
+  }
+
+  .wish-img {
+    background: linear-gradient(135deg, #FFF0EB, #FFE0D0);
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    position: relative;
+  }
+
+  .wish-heart {
+    position: absolute;
+    top: 10px; right: 10px;
+    color: var(--accent);
+    font-size: 1.1rem;
+  }
+
+  .wish-body {
+    padding: 1rem 1.2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .wish-category {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .wish-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--primary);
+  }
+
+  .wish-price {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--primary);
+    margin-top: auto;
+    padding-top: 0.5rem;
+  }
+
+  .wish-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 1.2rem 1.2rem;
+  }
+
+  .btn-add-from-wish {
+    flex: 1;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .btn-add-from-wish:hover { background: var(--accent); }
+
+  .btn-remove-wish {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+  }
+
+  .btn-remove-wish:hover {
+    background: #FFF0F0;
+    color: #D32F2F;
+    border-color: #D32F2F;
+  }
+
+  .wish-header-strip {
+    background: linear-gradient(135deg, #FFF0EB 0%, #FFE8DC 100%);
+    border-bottom: 2px solid rgba(255,77,0,0.15);
+    padding: 2rem 0 1.8rem;
+    margin-bottom: 2rem;
+  }
+
+  .wish-header-strip h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .wish-header-strip p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- WISHLIST HEADER -->
+<div class="wish-header-strip">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb mb-0" style="--bs-breadcrumb-divider-color: var(--text-muted);">
+        <li class="breadcrumb-item"><a href="/" style="color: var(--text-muted); text-decoration:none;">Shop</a></li>
+        <li class="breadcrumb-item active" style="color: var(--primary);">Wishlist</li>
+      </ol>
+    </nav>
+    <h1><i class="bi bi-heart-fill" style="color: var(--accent); font-size: 1.6rem;"></i> My Wishlist</h1>
+    <p>{{ items|length if items else 0 }} saved item{% if not items or items|length != 1 %}s{% endif %}</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  {% if items %}
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
+    {% for item in items %}
+    {# item = (name, price, stock, product_id, wishlist_id) #}
+    <div class="col fade-up" style="animation-delay: {{ loop.index0 * 0.06 }}s; opacity:0;">
+      <div class="wish-card">
+
+        <div class="wish-img">
+          📦
+          <span class="wish-heart"><i class="bi bi-heart-fill"></i></span>
+        </div>
+
+        <div class="wish-body">
+          <div class="wish-name">{{ item[0] }}</div>
+          <div class="wish-price">Rs. {{ "{:,.0f}".format(item[1]) }}</div>
+          <div style="font-size:0.78rem; color: var(--text-muted);">
+            {% if item[2] > 0 %}
+              <span style="color: var(--success);"><i class="bi bi-check-circle"></i> In stock</span>
+            {% else %}
+              <span style="color: #D32F2F;"><i class="bi bi-x-circle"></i> Out of stock</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="wish-actions">
+          <form action="/cart/add" method="POST" style="flex:1; display:flex;">
+            <input type="hidden" name="product_id" value="{{ item[3] }}">
+            <button class="btn-add-from-wish" {% if item[2] == 0 %}disabled{% endif %}>
+              <i class="bi bi-bag-plus"></i>
+              {% if item[2] == 0 %}Sold Out{% else %}Add to Cart{% endif %}
+            </button>
+          </form>
+          <form action="/wishlist/remove" method="POST">
+            <input type="hidden" name="wishlist_id" value="{{ item[4] }}">
+            <button type="submit" class="btn-remove-wish" title="Remove from wishlist">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state sc-card fade-up">
+    <div class="empty-icon">🤍</div>
+    <h3>Your wishlist is empty</h3>
+    <p>Save items you love by clicking the heart icon on any product.</p>
+    <a href="/" class="btn-accent mt-3 d-inline-flex align-items-center gap-2">
+      <i class="bi bi-grid"></i> Browse Products
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

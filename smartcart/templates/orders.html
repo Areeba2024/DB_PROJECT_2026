@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block title %}My Orders{% endblock %}
+
+{% block extra_css %}
+<style>
+  .order-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s;
+  }
+
+  .order-card:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+  }
+
+  .order-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .order-id {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--primary);
+  }
+
+  .order-id span {
+    color: var(--accent);
+  }
+
+  .order-date {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .status-pill {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .status-pending    { background: #FEF3CD; color: #856404; }
+  .status-confirmed  { background: var(--success-soft); color: var(--success); }
+  .status-cancelled  { background: #F8D7DA; color: #842029; }
+  .status-delivered  { background: #D1ECF1; color: #0C5460; }
+
+  .order-body {
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .order-meta {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .order-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .order-meta-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+  }
+
+  .order-meta-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--primary);
+  }
+
+  .order-total-highlight {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: var(--primary);
+  }
+
+  /* Stats strip at top */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+
+  .stat-number.accent { color: var(--accent); }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .timeline-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/">Shop</a></li>
+        <li class="breadcrumb-item active">Orders</li>
+      </ol>
+    </nav>
+    <h1>My Orders</h1>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  {% if orders %}
+
+  <!-- STATS STRIP -->
+  {% set total_spent = namespace(value=0) %}
+  {% for o in orders %}
+    {% set total_spent.value = total_spent.value + o[4] %}
+  {% endfor %}
+
+  <div class="stats-strip fade-up">
+    <div class="stat-card">
+      <div class="stat-number">{{ orders|length }}</div>
+      <div class="stat-label">Total Orders</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number accent">Rs. {{ "{:,.0f}".format(total_spent.value) }}</div>
+      <div class="stat-label">Total Spent</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">
+        {% set pending_count = orders | selectattr('4', 'equalto', 'pending') | list | length %}
+        {{ orders | selectattr(4, 'equalto', 'pending') | list | length if false else
+           orders | map(attribute=4) | select('equalto', 'pending') | list | length if false else
+           orders | length }}
+      </div>
+      <div class="stat-label">Active Orders</div>
+    </div>
+  </div>
+
+  <!-- ORDER LIST -->
+  <div class="fade-up fade-up-delay-1">
+    {% for o in orders %}
+    {# o = (user_id, name, order_id, order_date, total_amount, status) #}
+    {# from CustomerOrderView: user_id, name, order_id, order_date, total_amount, status #}
+    <div class="order-card">
+
+      <!-- Order Header -->
+      <div class="order-header">
+        <div class="order-id">
+          Order <span>#{{ o[2] }}</span>
+        </div>
+        <div class="order-date">
+          <i class="bi bi-calendar3"></i>
+          {{ o[3] }}
+        </div>
+        <div class="status-pill status-{{ o[5] | lower if o[5] else 'pending' }}">
+          {% if o[5] == 'confirmed' %}<i class="bi bi-check-circle me-1"></i>{% endif %}
+          {% if o[5] == 'pending' %}<i class="bi bi-clock me-1"></i>{% endif %}
+          {% if o[5] == 'cancelled' %}<i class="bi bi-x-circle me-1"></i>{% endif %}
+          {{ o[5] | title if o[5] else 'Pending' }}
+        </div>
+      </div>
+
+      <!-- Order Body -->
+      <div class="order-body">
+        <div class="order-meta">
+          <div class="order-meta-item">
+            <span class="order-meta-label">Customer</span>
+            <span class="order-meta-value">{{ o[1] }}</span>
+          </div>
+          <div class="order-meta-item">
+            <span class="order-meta-label">Order ID</span>
+            <span class="order-meta-value">#{{ o[2] }}</span>
+          </div>
+          <div class="order-meta-item">
+            <span class="order-meta-label">Payment</span>
+            <span class="order-meta-value" style="color: var(--success);">Cash on Delivery</span>
+          </div>
+        </div>
+
+        <div class="text-end">
+          <div style="font-size:0.78rem; color: var(--text-muted); margin-bottom:2px;">Order Total</div>
+          <div class="order-total-highlight">Rs. {{ "{:,.0f}".format(o[4]) }}</div>
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Back to shop -->
+  <div class="mt-4 fade-up">
+    <a href="/" class="btn-outline-sc d-inline-flex align-items-center gap-2">
+      <i class="bi bi-grid"></i> Back to Shop
+    </a>
+  </div>
+
+  {% else %}
+  <!-- EMPTY STATE -->
+  <div class="empty-state sc-card fade-up">
+    <div class="empty-icon">📋</div>
+    <h3>No orders yet</h3>
+    <p>When you place an order it will appear here.</p>
+    <a href="/" class="btn-accent mt-3 d-inline-flex align-items-center gap-2">
+      <i class="bi bi-grid"></i> Start Shopping
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

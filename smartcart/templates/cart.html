@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block title %}Your Cart{% endblock %}
+
+{% block extra_css %}
+<style>
+  .cart-item-row {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    transition: box-shadow 0.2s;
+    margin-bottom: 0.8rem;
+  }
+
+  .cart-item-row:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+  }
+
+  .cart-item-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #F0EDE8, #E8E4DD);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+  }
+
+  .cart-item-info { flex: 1; min-width: 0; }
+
+  .cart-item-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cart-item-meta {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .cart-item-price {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--primary);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .cart-item-subtotal {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  .btn-remove {
+    background: none;
+    border: none;
+    color: #CCC;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .btn-remove:hover { color: #D32F2F; background: #FFF0F0; }
+
+  /* Order Summary Box */
+  .summary-box {
+    background: var(--primary);
+    color: white;
+    border-radius: 16px;
+    padding: 1.8rem;
+    position: sticky;
+    top: 80px;
+  }
+
+  .summary-box h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .summary-line.total {
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    padding-top: 0.8rem;
+    margin-top: 0.8rem;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    margin-bottom: 1.2rem;
+  }
+
+  .btn-checkout {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.9rem;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-checkout:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-checkout:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .secure-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.4);
+    margin-top: 0.8rem;
+    justify-content: center;
+  }
+
+  .cart-count-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-bottom: 1.2rem;
+  }
+
+  .cart-count-badge {
+    background: var(--accent);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/">Shop</a></li>
+        <li class="breadcrumb-item active">Cart</li>
+      </ol>
+    </nav>
+    <h1>Your Cart</h1>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  {% if items %}
+  <div class="row g-4">
+
+    <!-- LEFT: Cart Items -->
+    <div class="col-lg-8">
+      <div class="cart-count-header fade-up">
+        <div class="cart-count-badge">{{ items|length }}</div>
+        item{% if items|length != 1 %}s{% endif %} in your cart
+      </div>
+
+      {% for item in items %}
+      {# item = (name, price, quantity, cart_id) #}
+      <div class="cart-item-row fade-up" style="animation-delay: {{ loop.index0 * 0.06 }}s; opacity:0;">
+
+        <!-- Icon -->
+        <div class="cart-item-icon">📦</div>
+
+        <!-- Info -->
+        <div class="cart-item-info">
+          <div class="cart-item-name">{{ item[0] }}</div>
+          <div class="cart-item-meta">
+            Rs. {{ "{:,.0f}".format(item[1]) }} per unit &nbsp;·&nbsp;
+            Qty: <strong style="color: var(--primary);">{{ item[2] }}</strong>
+          </div>
+        </div>
+
+        <!-- Price -->
+        <div>
+          <div class="cart-item-price">Rs. {{ "{:,.0f}".format(item[1] * item[2]) }}</div>
+          <div class="cart-item-subtotal">subtotal</div>
+        </div>
+
+        <!-- Remove -->
+        <form action="/cart/remove" method="POST">
+          <input type="hidden" name="cart_id" value="{{ item[3] }}">
+          <button type="submit" class="btn-remove" title="Remove item">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </form>
+
+      </div>
+      {% endfor %}
+
+      <!-- Continue Shopping -->
+      <a href="/" class="btn-outline-sc d-inline-flex align-items-center gap-2 mt-3 fade-up">
+        <i class="bi bi-arrow-left"></i> Continue Shopping
+      </a>
+    </div>
+
+    <!-- RIGHT: Order Summary -->
+    <div class="col-lg-4 fade-up fade-up-delay-2">
+      <div class="summary-box">
+        <h3><i class="bi bi-receipt me-2"></i>Order Summary</h3>
+
+        {% set total = namespace(value=0) %}
+        {% for item in items %}
+          {% set total.value = total.value + (item[1] * item[2]) %}
+        {% endfor %}
+
+        {% for item in items %}
+        <div class="summary-line">
+          <span>{{ item[0][:22] }}{% if item[0]|length > 22 %}…{% endif %} ×{{ item[2] }}</span>
+          <span>Rs. {{ "{:,.0f}".format(item[1] * item[2]) }}</span>
+        </div>
+        {% endfor %}
+
+        <div class="summary-line">
+          <span>Shipping</span>
+          <span style="color: #4CAF50;">Free</span>
+        </div>
+
+        <div class="summary-line total">
+          <span>Total</span>
+          <span>Rs. {{ "{:,.0f}".format(total.value) }}</span>
+        </div>
+
+        <!-- Place Order -->
+        <form action="/order/place" method="POST">
+          <button type="submit" class="btn-checkout">
+            <i class="bi bi-bag-check"></i> Place Order
+          </button>
+        </form>
+
+        <div class="secure-note">
+          <i class="bi bi-shield-check"></i>
+          Secure checkout · No payment gateway
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {% else %}
+  <!-- EMPTY CART -->
+  <div class="empty-state sc-card fade-up">
+    <div class="empty-icon">🛒</div>
+    <h3>Your cart is empty</h3>
+    <p>Looks like you haven't added anything yet.</p>
+    <a href="/" class="btn-accent mt-3 d-inline-flex align-items-center gap-2">
+      <i class="bi bi-grid"></i> Start Shopping
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
