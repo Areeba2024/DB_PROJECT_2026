@@ -23,8 +23,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 EMAIL_HOST     = 'smtp.gmail.com'
 EMAIL_PORT     = 587
-EMAIL_USER     = 'nahihaiemail53@gmail.com'
-EMAIL_PASSWORD = 'ixnc ibdq olmj xmjt'   # Gmail App Password
+EMAIL_USER     = ''
+EMAIL_PASSWORD = ''   # Gmail App Password
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
